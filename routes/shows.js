@@ -6,10 +6,10 @@ showRouter.get('/', async (req, res) => {
   const shows = await Show.findAll()
   res.json(shows)
 })
-showRouter.get('/:id', async (req, res) => {
+showRouter.get('/:id(\\d+)', async (req, res) => {
   const param = req.params.id
-  const shows = await Show.findByPk(param)
-  res.json(shows)
+  const show = await Show.findByPk(param)
+  res.json(show)
 })
 showRouter.get('/:showId/users', async (req, res) => {
   try {
