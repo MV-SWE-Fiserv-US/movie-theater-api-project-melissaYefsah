@@ -7,7 +7,7 @@ showRouter.get('/', async (req, res) => {
   const shows = await Show.findAll()
   res.json(shows)
 })
-showRouter.get('/:id', [check('id').isInt()], async (req, res) => {
+showRouter.get('/:id(\\d+)', [check('id').isInt()], async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     res.json({ error: errors.array() })
