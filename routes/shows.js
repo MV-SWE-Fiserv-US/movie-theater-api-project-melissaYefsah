@@ -1,15 +1,21 @@
 const { Router } = require('express')
 const showRouter = Router()
 const { User, Show } = require('../models/index.js')
+const { check, validationResult } = require('express-validator')
 
 showRouter.get('/', async (req, res) => {
   const shows = await Show.findAll()
   res.json(shows)
 })
-showRouter.get('/:id(\\d+)', async (req, res) => {
-  const param = req.params.id
-  const show = await Show.findByPk(param)
-  res.json(show)
+showRouter.get('/:id', [check('id').isInt()], async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    res.json({ error: errors.array() })
+  } else {
+    const param = req.params.id
+    const show = await Show.findByPk(param)
+    res.json(show)
+  }
 })
 showRouter.get('/:showId/users', async (req, res) => {
   try {
@@ -50,8 +56,11 @@ showRouter.delete('/:id', async (req, res) => {
   res.json(deletedShow)
 })
 // Define the route to get shows by genre
-showRouter.get('/:genre', async (req, res) => {
-  try {
+showRouter.get('/:genre', [check('genre').isString()], async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    res.json({ error: errors.array() })
+  } else {
     const genre = req.params.genre
     console.log('Requested genre:', genre)
     if (!genre) {
@@ -67,9 +76,6 @@ showRouter.get('/:genre', async (req, res) => {
     }
 
     res.json(foundShows)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'An error occurred while querying the database' })
   }
 })
 
