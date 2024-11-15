@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const userRouter = Router()
 const { User, Show } = require('../models/index.js')
+const { check, validationResult } = require('express-validator')
 
 userRouter.get('/', async (req, res) => {
   const users = await User.findAll()
@@ -26,29 +27,40 @@ userRouter.get('/:userId/shows', async (req, res) => {
   }
 })
 
-userRouter.post('/users/:userId/shows/:showId', async (req, res) => {
-  const user = await User.create(req.body)
-  res.json(user)
+userRouter.post('/:userId/shows/:showId', [check('username').isEmail()], async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    res.json({ error: errors.array() })
+  } else {
+    const user = await User.create(req.body)
+    res.json(user)
+  }
 })
-userRouter.put('/:userId/shows/:showId', async (req, res) => {
+
+userRouter.put('/:userId/shows/:showId', [check('username').isEmail()], async (req, res) => {
   const userId = parseInt(req.params.userId) // Get the user ID from the URL
   const showId = parseInt(req.params.showId) // Get the show ID from the URL
-  try {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    res.json({ error: errors.array() })
+  } else {
+    try {
     // Check if user and show exist
-    const user = await User.findByPk(userId)
-    const show = await Show.findByPk(showId)
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
+      const user = await User.findByPk(userId)
+      const show = await Show.findByPk(showId)
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' })
+      }
+      if (!show) {
+        return res.status(404).json({ message: 'Show not found' })
+      }
+      // Associate the user with the show (assuming a many-to-many relationship)
+      await user.addShow(show)// Assuming `addShow` is a method created by Sequelize for a many-to-many relationship
+      res.json({ message: 'User has been associated with the show.' })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Failed to associate user with show' })
     }
-    if (!show) {
-      return res.status(404).json({ message: 'Show not found' })
-    }
-    // Associate the user with the show (assuming a many-to-many relationship)
-    await user.addShow(show)// Assuming `addShow` is a method created by Sequelize for a many-to-many relationship
-    res.json({ message: 'User has been associated with the show.' })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Failed to associate user with show' })
   }
 })
 

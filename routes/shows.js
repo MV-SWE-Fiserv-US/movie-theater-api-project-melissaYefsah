@@ -31,7 +31,7 @@ showRouter.get('/:showId/users', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching users' })
   }
 })
-showRouter.put('/:id/available', async (req, res) => {
+showRouter.put('/:id/available', [check('title').isLength({ min: 1, max: 20 })], async (req, res) => {
   const showId = req.params.id
   const newAvailability = req.body.available
 
