@@ -3,11 +3,16 @@ const showRouter = Router()
 const { User, Show } = require('../models/index.js')
 const { check, validationResult } = require('express-validator')
 
-showRouter.get('/', async (req, res) => {
-  const shows = await Show.findAll()
-  res.json(shows)
+showRouter.get('/', [check('title').isLength({ min: 1, max: 25 })], async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    res.json({ error: errors.array() })
+  } else {
+    const shows = await Show.findAll()
+    res.json(shows)
+  }
 })
-showRouter.get('/:id(\\d+)', [check('id').isInt()], async (req, res) => {
+showRouter.get('/:id(\\d+)', [check('id').isInt()], [check('title').isLength({ min: 1, max: 25 })], async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
     res.json({ error: errors.array() })
@@ -31,7 +36,7 @@ showRouter.get('/:showId/users', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching users' })
   }
 })
-showRouter.put('/:id/available', [check('title').isLength({ min: 1, max: 20 })], async (req, res) => {
+showRouter.put('/:id/available', [check('title').isLength({ min: 1, max: 25 })], async (req, res) => {
   const showId = req.params.id
   const newAvailability = req.body.available
 
